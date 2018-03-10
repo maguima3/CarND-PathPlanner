@@ -16,7 +16,6 @@ const double max_velocity = 49.8 * MPH_TO_MS; // miles per hour
 const double horizon = 50;
 const double points_per_second = 50; // The car visits one point every .02 seconds
 const double lane_width = 4.0; //in meters
-const double security_distance = 30; // There's risk of collision if other cars are closer [meters]
 
 using namespace std;
 
@@ -182,6 +181,34 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 
 }
 
+class Vehicle {
+ private:
+ public:
+  double id;
+  double x;
+  double y;
+  double s;
+  double d;
+  double vx;
+  double vy;
+  double yaw;
+
+
+  Vehicle(double x, double y, double s, double d) :
+    x(x), y(y), s(s), d(d) {}
+
+  void setVelocity(double vx, double vy) {
+    this->vx = vx;
+    this->vy = vy;
+  }
+  void setId(double id) {
+    this->id = id;
+  }
+  double getSpeed() {
+    return sqrt(vx*vx + vy*vy);
+  }
+};
+
 int main() {
   uWS::Hub h;
 
@@ -220,7 +247,7 @@ int main() {
   }
 
   double ref_velocity = 1.0; // Start at 1 m/s
-  double lane = 1.0; // Double to ease maths
+  double lane = 1.0; // Double to ease math
 
   h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy, &ref_velocity, &lane](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
@@ -271,6 +298,19 @@ int main() {
 
           	json msgJson;
 
+          	// Define our car
+          	Vehicle ego = Vehicle(car_x, car_y, car_s, car_d);
+          	ego.setId(-1);
+
+          	// Vehicles around our car
+          	vector<Vehicle> cars_left_ahead;
+          vector<Vehicle> cars_center_ahead;
+          vector<Vehicle> cars_right_ahead;
+
+          vector<Vehicle> cars_left_behind;
+          vector<Vehicle> cars_center_behind;
+          vector<Vehicle> cars_right_behind;
+
           	// Number of waypoints calculated in the last iteration, which the car didn't go through
           	// Would be a number close to 50 (e.g 47)
           	double prev_size = previous_path_x.size();
@@ -280,46 +320,250 @@ int main() {
           	  car_s = end_path_s; // Use last point of the previous path as car_s to ease calculations
           	}
 
-          	bool too_close = false;
+          	// Flags of the behaviors
+          	bool change_lane = false;
+
+          	// Minimum distance between two vehicles (gap)
+          	const double min_gap = 50.0;
+          	// Range where other vehicles are detected
+          	const double sensor_range = 100.0; //meters
+          	const double safety_distance = 20.0; // There's risk of collision if other cars are closer [meters]
+          	const double brake_distance = 30.0; // Break if there is any car closer
+
+          	double closest_car_distance = 20000000; // Indicates the distance of the closest car in our lane. Controls acceleration
 
           	// Check other cars in the road
           	for (int i=0; i<sensor_fusion.size(); ++i) {
-          	  double other_car_d = sensor_fusion[i][6];
 
-          	  // If the other car is on our same lane
-          	  if (other_car_d>lane*lane_width && other_car_d<(lane+1)*lane_width) {
-          	    // Check how close the other car is
-          	    double other_car_s = sensor_fusion[i][5];
+          	  double other_id = sensor_fusion[i][0];
+          	  double other_x = sensor_fusion[i][1];
+          	  double other_y = sensor_fusion[i][2];
+          	  double other_vx = sensor_fusion[i][3];
+          	  double other_vy = sensor_fusion[i][4];
+          	  double other_s = sensor_fusion[i][5];
+          	  double other_d = sensor_fusion[i][6];
 
-          	    double other_car_vx = sensor_fusion[i][3];
-          	    double other_car_vy = sensor_fusion[i][4];
-          	    double other_car_v = sqrt(other_car_vx*other_car_vx + other_car_vy*other_car_vy);
+          	  Vehicle other = Vehicle(other_x, other_y, other_s, other_d);
+          	  other.setVelocity(other_vx, other_vy);
+          	  other.setId(other_id);
+
+          	  double diff = other.s - ego.s;
+          	  bool is_ahead = (diff > 0);
+          	  bool is_detectable = (abs(diff) <= sensor_range);
+
+          	  // Calculate the lane the other car is on
+          	  // Check if it is too close to our car
+          	  if (other.d < lane_width) { // left lane
+
+          	    if (is_ahead && is_detectable) {
+          	      //printf("Vehicle too close on the left %f meters ahead\n", diff);
+          	      cars_left_ahead.push_back(other);
+          	    }
+          	    else if (!is_ahead && is_detectable) {
+          	      cars_left_behind.push_back(other);
+          	    }
+          	  }
+          	  else if (other.d > lane_width && other.d < 2*lane_width) { // center line
+          	    if (is_ahead && is_detectable) {
+          	      //printf("Vehicle too close on the center %f meters ahead\n", diff);
+                cars_center_ahead.push_back(other);
+              }
+              else if (!is_ahead && is_detectable) {
+                cars_center_behind.push_back(other);
+              }
+          	  }
+          	  else if (other.d > 2*lane_width) { //right lane
+          	    if (is_ahead && is_detectable) {
+          	      //printf("Vehicle too close on the right %f meters ahead\n", diff);
+                cars_right_ahead.push_back(other);
+              }
+              else if (!is_ahead && is_detectable) {
+                cars_right_behind.push_back(other);
+              }
+          	  }
+
+          	  // Check if any other car is in our lane
+          	  // If it is too close, we need to change lane!
+
+          	  if (other.d>lane*lane_width && other.d<(lane+1)*lane_width) {
+          	    double cars_lane_distance = abs(other.s-ego.s);
+          	    bool is_too_close = (is_ahead) && (cars_lane_distance < min_gap);
+
+          	    if (is_too_close) {
+          	      change_lane = true;
+
+          	      if (cars_lane_distance < closest_car_distance){
+                  closest_car_distance = cars_lane_distance;
+                }
+          	      //printf("Vehicle too close on lane %f. It is %f meters ahead\n", lane, (other.s - ego.s));
+          	    }
+          	    /*
+          	    // Check how close the other_car car is
+          	    double other_car_s = other.s;
+          	    double other_car_v = other.getSpeed();
 
           	    // Predict other car's position into the future
           	    // To be consistent with our car_s (which could also be in the future)
           	    other_car_s += other_car_v*prev_size/points_per_second;
 
           	    if (other_car_s>car_s && (other_car_s-car_s)<security_distance) {
-          	      too_close = true;
+          	      change_lane = true;
 
           	      // Logic about lane changing
-          	      if (lane > 0) {
-          	        lane = 0;
-          	      }
+          	      //if (lane > 0) {
+          	      //  lane = 0;
+          	      //}
           	    }
-
-          	  }
-          	}
-
-          	// Reduce target velocity if we are too close to other cars
-          	if (too_close) {
-          	  //lane = 1;
-          	  ref_velocity -= .6; // m/s
-          	} else if (ref_velocity < max_velocity){
-          	  ref_velocity += .6;
+          	    */
+          	   }
           	}
 
 
+
+
+          	// Logic about changing lanes
+
+
+          // Predict other cars position in the future (if we are using previous waypoints)
+          	if (change_lane) {
+          	  double min_distance_ahead = sensor_range;
+          	  double min_distance_behind = sensor_range;
+          	  bool car_ahead = true;
+          	  bool car_behind = true;
+          	  double next_lane;
+
+              // Situation 1) We are on the left/right lane. We can just move to the middle
+              if (lane != 1) {
+                // Check vehicles in the center lane and look for a gap
+                for (auto other = cars_center_ahead.begin(); other!=cars_center_ahead.end(); ++other) {
+                  //double other_future_s = other->s + other->getSpeed() * prev_size / points_per_second;
+                  //double distance = (other_future_s-car_s);
+                  double distance = abs(other->s - car_s);
+                  printf("CA - Gap in meters: %f\n", distance);
+                  if (distance<min_distance_ahead) {
+                    min_distance_ahead = distance;
+                  }
+                }
+                for (auto other = cars_center_behind.begin(); other!=cars_center_behind.end(); ++other) {
+                  //double other_future_s = other->s + other->getSpeed() * prev_size / points_per_second;
+                  //double distance = (other_future_s-car_s);
+                  double distance = abs(other->s - car_s);
+                  printf("CB - Gap in meters: %f\n", distance);
+                  if (distance<min_distance_behind) {
+                    min_distance_behind = distance;
+                  }
+                }
+
+                if (min_distance_ahead>safety_distance) {
+                  //lane = 1;
+                  car_ahead = false;
+                  printf("No cars ahead! Closest car is at %f meters\n", min_distance_ahead);
+                }
+                if (abs(min_distance_behind)>safety_distance) {
+                  printf("No cars behind! Closest car is at %f meters\n", min_distance_behind);
+                  car_behind = false;
+                }
+
+                if (!car_ahead && !car_behind) {
+                  lane = 1.0;
+                }
+              }
+
+              // Situation 2) We are in the center lane. We have to decide if we move left or right
+              else {
+                bool left_change = false;
+                bool right_change = false;
+
+                // First check if we can move left
+                for (auto other = cars_left_ahead.begin(); other!=cars_left_ahead.end(); ++other) {
+                  //double other_future_s = other->s + other->getSpeed() * prev_size / points_per_second;
+                  //double distance = (other_future_s-car_s);
+                  double distance = abs(other->s - car_s);
+                  printf("LA - Gap in meters: %f\n", distance);
+                  if (distance<min_distance_ahead) {
+                    min_distance_ahead = distance;
+                  }
+                }
+                for (auto other = cars_left_behind.begin(); other!=cars_left_behind.end(); ++other) {
+                  double distance = abs(other->s - car_s);
+                  printf("LB - Gap in meters: %f\n", distance);
+                  if (distance<min_distance_behind) {
+                    min_distance_behind = distance;
+                  }
+                }
+
+                if (min_distance_ahead>safety_distance) {
+                  car_ahead = false;
+                  printf("No cars ahead! Closest car is at %f meters\n", min_distance_ahead);
+                }
+                if (min_distance_behind>safety_distance) {
+                  printf("No cars behind! Closest car is at %f meters\n", min_distance_behind);
+                  car_behind = false;
+                }
+
+                if (!car_ahead && !car_behind) {
+                  left_change = true;
+                }
+
+                // Then check if we can move to the right
+                min_distance_ahead = sensor_range;
+                min_distance_behind = sensor_range;
+                car_ahead = true;
+                car_behind = true;
+
+                for (auto other = cars_right_ahead.begin(); other!=cars_right_ahead.end(); ++other) {
+                  //double other_future_s = other->s + other->getSpeed() * prev_size / points_per_second;
+                  //double distance = (other_future_s-car_s);
+                  double distance = abs(other->s - car_s);
+                  printf("RA - Gap in meters: %f\n", distance);
+                  if (distance<min_distance_ahead) {
+                    min_distance_ahead = distance;
+                  }
+                }
+                for (auto other = cars_right_behind.begin(); other!=cars_right_behind.end(); ++other) {
+                  double distance = abs(other->s - car_s);
+                  printf("RB - Gap in meters: %f\n", distance);
+                  if (distance<min_distance_behind) {
+                    min_distance_behind = distance;
+                  }
+                }
+
+                if (min_distance_ahead>safety_distance) {
+                  car_ahead = false;
+                  printf("No cars ahead! Closest car is at %f meters\n", min_distance_ahead);
+                }
+                if (min_distance_behind>safety_distance) {
+                  printf("No cars behind! Closest car is at %f meters\n", min_distance_behind);
+                  car_behind = false;
+                }
+
+                if (!car_ahead && !car_behind) {
+                  right_change = true;
+                }
+
+                // Now decide if we move to the left or to the right
+                if (left_change && !right_change) {
+                  lane = 0;
+                }
+                else if (!left_change && right_change) {
+                  lane = 2;
+                }
+                else if (left_change && right_change) {
+                  // Move to lane with less traffic
+                  size_t traffic_left = cars_left_ahead.size();
+                  size_t traffic_right = cars_right_ahead.size();
+
+                  lane = traffic_left<traffic_right ? 0 : 2;
+                }
+              }
+          	}
+
+            // Reduce target velocity if we are too close to other cars
+            if (closest_car_distance < brake_distance) {
+              ref_velocity -= .6; // m/s
+            } else if (ref_velocity < max_velocity){
+              ref_velocity += .6;
+            }
 
           	// Create a list of evenly spaced (x,y) points, using the previously calculated waypoints plus
           	// some other future points
@@ -370,10 +614,8 @@ int main() {
             ptsy.push_back(ref_y);
           }
 
-          // Second, add three "anchor" points, located at 30, 60 and 90 meters from the car's current position
-          // Note that the reference velocity is ~25m/s, which means that the three anchor points are not part of
-          // the previous trajectory points (50 points ~ 1s ~ 25m )
-          // This also helps to find a smooth trajectory
+          // Second, add three "anchor" points, located at 30, 60 and 90 meters from car_s
+          // This helps to find a smooth trajectory
           vector<double> next_wp0 = getXY(car_s+ 30, (lane*lane_width + lane_width/2), map_waypoints_s, map_waypoints_x, map_waypoints_y);
           vector<double> next_wp1 = getXY(car_s+ 60, (lane*lane_width + lane_width/2), map_waypoints_s, map_waypoints_x, map_waypoints_y);
           vector<double> next_wp2 = getXY(car_s+ 90, (lane*lane_width + lane_width/2), map_waypoints_s, map_waypoints_x, map_waypoints_y);
