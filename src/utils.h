@@ -9,6 +9,12 @@ const double horizon = 50;
 const double points_per_second = 50; // The car visits one point every .02 seconds
 const double lane_width = 4.0; //in meters
 
+const double min_gap = 50.0; // Minimum distance between two vehicles (gap)
+const double sensor_range = 100.0; // Range in which other vehicles are detected [m]
+const double safety_distance = 30.0; // There's risk of collision if other cars are closer [meters]
+const double safety_distance_behind = 5.0;
+const double brake_distance = 30.0; // Break if there is any car closer
+
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return PI; }
 double deg2rad(double x) { return x * pi() / 180; }
@@ -152,6 +158,160 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
   return {x,y};
 
 }
+
+
+class Vehicle {
+ private:
+ public:
+  double id;
+  double x;
+  double y;
+  double s;
+  double d;
+  double vx;
+  double vy;
+  double yaw;
+  double lane;
+
+  Vehicle(double x=0, double y=0, double s=0, double d=0) :
+    x(x), y(y), s(s), d(d), id(-1) {
+
+    if (d < lane_width) { // left lane
+      lane = 0.0;
+    }
+
+    else if (d>lane_width && d<2*lane_width) { // center line
+      lane = 1.0;
+    }
+
+    else if (d>2*lane_width) { //right lane
+      lane = 2.0;
+    }
+  }
+
+  void setVelocity(double vx, double vy);
+  void setId(double id);
+  double getSpeed();
+  double getLane();
+};
+
+void Vehicle::setVelocity(double vx, double vy) {
+    this->vx = vx;
+    this->vy = vy;
+  }
+void Vehicle::setId(double id) {
+  this->id = id;
+}
+double Vehicle::getSpeed() {
+  return sqrt(vx*vx + vy*vy);
+}
+
+class VehicleDetector {
+ private:
+  Vehicle ego;
+  double lane;
+
+  Vehicle car_infront;
+
+ public:
+  VehicleDetector::VehicleDetector(Vehicle ego, double lane, vector<vector<double>> sensor_fusion);
+
+  bool static infront_tooClose;
+  double static closest_car_distance;
+
+  // Vehicles around ego car
+  vector<Vehicle> cars_left_ahead;
+  vector<Vehicle> cars_center_ahead;
+  vector<Vehicle> cars_right_ahead;
+
+  vector<Vehicle> cars_left_behind;
+  vector<Vehicle> cars_center_behind;
+  vector<Vehicle> cars_right_behind;
+
+  Vehicle getCarInfront() {
+    if (infront_tooClose) {
+      return car_infront;
+    }
+    else {
+      return 0;
+    }
+  }
+
+};
+
+VehicleDetector::infront_tooClose = false;
+VehicleDetector::closest_car_distance = 2000000000;
+
+VehicleDetector::VehicleDetector(Vehicle ego, double lane, vector<vector<double>> sensor_fusion) {
+
+  this->ego = ego;
+  this->lane = lane;
+
+  // Check where are the other cars in the road
+  for (int i=0; i<sensor_fusion.size(); ++i) {
+
+    double other_id = sensor_fusion[i][0];
+    double other_x = sensor_fusion[i][1];
+    double other_y = sensor_fusion[i][2];
+    double other_vx = sensor_fusion[i][3];
+    double other_vy = sensor_fusion[i][4];
+    double other_s = sensor_fusion[i][5];
+    double other_d = sensor_fusion[i][6];
+
+    Vehicle other = Vehicle(other_x, other_y, other_s, other_d);
+    other.setVelocity(other_vx, other_vy);
+    other.setId(other_id);
+
+    double diff = other.s - ego.s;
+    bool is_ahead = (diff > 0);
+    bool is_detectable = (abs(diff) <= sensor_range);
+
+    // Calculate the lane of the other car
+    if (other.lane == 0.0) {
+      if (is_ahead && is_detectable) {
+        cars_left_ahead.push_back(other);
+      }
+      else if (!is_ahead && is_detectable) {
+        cars_left_behind.push_back(other);
+      }
+    }
+
+    else if (other.lane == 1.0) {
+      if (is_ahead && is_detectable) {
+        cars_center_ahead.push_back(other);
+      }
+      else if (!is_ahead && is_detectable) {
+        cars_center_behind.push_back(other);
+      }
+    }
+
+    else if (other.lane == 2.0) {
+      if (is_ahead && is_detectable) {
+        cars_right_ahead.push_back(other);
+      }
+      else if (!is_ahead && is_detectable) {
+        cars_right_behind.push_back(other);
+      }
+    }
+
+    // Check if the other car is in our lane
+    // If it is too close, we need to change lane!
+    if (other.lane == lane) {
+      double distance = abs(other.s-ego.s);
+      infront_tooClose = (is_ahead) && (distance < min_gap);
+
+      if (infront_tooClose) {
+        car_infront = other;
+
+        // Update the distance with the car in front
+        if (distance < closest_car_distance){
+          closest_car_distance = distance;
+        }
+      }
+    }
+  }
+}
+
 
 
 #endif /* UTILS_H */

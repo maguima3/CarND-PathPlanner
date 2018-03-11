@@ -20,180 +20,6 @@ using namespace std;
 using json = nlohmann::json;
 
 
-/*
-#define PI 3.1416
-const double MPH_TO_MS =  0.44; //conversion factor
-
-const double max_velocity = 49.5 * MPH_TO_MS; // miles per hour
-const double horizon = 50;
-const double points_per_second = 50; // The car visits one point every .02 seconds
-const double lane_width = 4.0; //in meters
-
-*/
-
-/*
-
-// For converting back and forth between radians and degrees.
-constexpr double pi() { return PI; }
-double deg2rad(double x) { return x * pi() / 180; }
-double rad2deg(double x) { return x * 180 / pi(); }
-
-// Checks if the SocketIO event has JSON data.
-// If there is data the JSON object in string format will be returned,
-// else the empty string "" will be returned.
-string hasData(string s) {
-  auto found_null = s.find("null");
-  auto b1 = s.find_first_of("[");
-  auto b2 = s.find_first_of("}");
-  if (found_null != string::npos) {
-    return "";
-  } else if (b1 != string::npos && b2 != string::npos) {
-    return s.substr(b1, b2 - b1 + 2);
-  }
-  return "";
-}
-
-// Euclidean distance between two points (x1, x2), (y1, y2)
-double distance(double x1, double y1, double x2, double y2)
-{
-	return sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
-}
-
-// Calculates the closest waypoint (maps_x[i], maps_y[i]), with respect to our point (x, y)
-int ClosestWaypoint(double x, double y, const vector<double> &maps_x, const vector<double> &maps_y)
-{
-
-	double closestLen = 100000; //large number
-	int closestWaypoint = 0;
-
-	for(int i = 0; i < maps_x.size(); i++)
-	{
-		double map_x = maps_x[i];
-		double map_y = maps_y[i];
-		double dist = distance(x,y,map_x,map_y);
-		if(dist < closestLen)
-		{
-			closestLen = dist;
-			closestWaypoint = i;
-		}
-
-	}
-
-	return closestWaypoint;
-
-}
-
-int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x, const vector<double> &maps_y)
-{
-
-	int closestWaypoint = ClosestWaypoint(x,y,maps_x,maps_y);
-
-	double map_x = maps_x[closestWaypoint];
-	double map_y = maps_y[closestWaypoint];
-
-	double heading = atan2((map_y-y),(map_x-x));
-
-	// Difference between our current direction, and the direction we should go next (heading)
-	double angle = fabs(theta-heading);
-  angle = min(2*pi() - angle, angle);
-
-  // Changes in the direction of our car of more than pi/4 rads are not desired
-  if(angle > pi()/4)
-  {
-    // Get the next waypoint, ??
-    closestWaypoint++;
-    // Unless it is the last waypoint
-    if (closestWaypoint == maps_x.size())
-    {
-      // Our current
-      closestWaypoint = 0;
-    }
-  }
-
-  return closestWaypoint;
-}
-
-// Transform from Cartesian x,y coordinates to Frenet s,d coordinates
-vector<double> getFrenet(double x, double y, double theta, const vector<double> &maps_x, const vector<double> &maps_y)
-{
-	int next_wp = NextWaypoint(x,y, theta, maps_x,maps_y);
-
-	int prev_wp;
-	prev_wp = next_wp-1;
-	if(next_wp == 0)
-	{
-	  // The circuit is closed and the cars should drive in a loop
-	  // If the next waypoint is the first (0), the the previous wp is the last one!
-		prev_wp  = maps_x.size()-1;
-	}
-
-	double n_x = maps_x[next_wp]-maps_x[prev_wp];
-	double n_y = maps_y[next_wp]-maps_y[prev_wp];
-	double x_x = x - maps_x[prev_wp];
-	double x_y = y - maps_y[prev_wp];
-
-	// find the projection of x onto n
-	double proj_norm = (x_x*n_x+x_y*n_y)/(n_x*n_x+n_y*n_y);
-	double proj_x = proj_norm*n_x;
-	double proj_y = proj_norm*n_y;
-
-	double frenet_d = distance(x_x,x_y,proj_x,proj_y);
-
-	//see if d value is positive or negative by comparing it to a center point
-
-	double center_x = 1000-maps_x[prev_wp];
-	double center_y = 2000-maps_y[prev_wp];
-	double centerToPos = distance(center_x,center_y,x_x,x_y);
-	double centerToRef = distance(center_x,center_y,proj_x,proj_y);
-
-	if(centerToPos <= centerToRef)
-	{
-		frenet_d *= -1;
-	}
-
-	// calculate s value
-	double frenet_s = 0;
-	for(int i = 0; i < prev_wp; i++)
-	{
-		frenet_s += distance(maps_x[i],maps_y[i],maps_x[i+1],maps_y[i+1]);
-	}
-
-	frenet_s += distance(0,0,proj_x,proj_y);
-
-	return {frenet_s,frenet_d};
-
-}
-
-// Transform from Frenet s,d coordinates to Cartesian x,y
-vector<double> getXY(double s, double d, const vector<double> &maps_s, const vector<double> &maps_x, const vector<double> &maps_y)
-{
-	int prev_wp = -1;
-
-	while(s > maps_s[prev_wp+1] && (prev_wp < (int)(maps_s.size()-1) ))
-	{
-		prev_wp++;
-	}
-
-	int wp2 = (prev_wp+1)%maps_x.size();
-
-	double heading = atan2((maps_y[wp2]-maps_y[prev_wp]),(maps_x[wp2]-maps_x[prev_wp]));
-	// the x,y,s along the segment
-	double seg_s = (s-maps_s[prev_wp]);
-
-	double seg_x = maps_x[prev_wp]+seg_s*cos(heading);
-	double seg_y = maps_y[prev_wp]+seg_s*sin(heading);
-
-	double perp_heading = heading-pi()/2;
-
-	double x = seg_x + d*cos(perp_heading);
-	double y = seg_y + d*sin(perp_heading);
-
-	return {x,y};
-
-}
-
-*/
-
 class Vehicle {
  private:
  public:
@@ -314,6 +140,7 @@ int main() {
           	Vehicle ego = Vehicle(car_x, car_y, car_s, car_d);
           	ego.setId(0);
 
+          	/*
           	// Vehicles around our car
           	vector<Vehicle> cars_left_ahead;
           vector<Vehicle> cars_center_ahead;
@@ -322,6 +149,7 @@ int main() {
           vector<Vehicle> cars_left_behind;
           vector<Vehicle> cars_center_behind;
           vector<Vehicle> cars_right_behind;
+          */
 
           	// Number of waypoints calculated in the last iteration, which the car didn't go through
           	// Would be a number close to 50 (e.g 47)
@@ -332,17 +160,32 @@ int main() {
           	  car_s = end_path_s; // Use last point of the previous path as car_s to ease calculations
           	}
 
-          	bool change_lane = false; // Flag
+          	VehicleDetector detector = VehicleDetector(ego, lane, sensor_fusion);
+          // Vehicles detected around our car
+          vector<Vehicle> cars_left_ahead = detector.cars_left_ahead;
+          vector<Vehicle> cars_center_ahead = detector.cars_center_ahead;
+          vector<Vehicle> cars_right_ahead = detector.cars_right_ahead;
+          vector<Vehicle> cars_left_behind = detector.cars_left_behind;
+          vector<Vehicle> cars_center_behind = detector.cars_center_behind;
+          vector<Vehicle> cars_right_behind = detector.cars_right_behind;
 
+          bool change_lane = detector.infront_tooClose;
+          Vehicle car_infront = detector.getCarInfront();
+
+          	/*
+          	bool change_lane = false; // Flag
           	const double min_gap = 50.0; // Minimum distance between two vehicles (gap)
           	const double sensor_range = 100.0; // Range in which other vehicles are detected [m]
           	const double safety_distance = 30.0; // There's risk of collision if other cars are closer [meters]
           	const double safety_distance_behind = 5.0;
           	const double brake_distance = 30.0; // Break if there is any car closer
 
+
           	double closest_car_distance = 20000000; // Indicates the distance of the closest car in our lane. Controls acceleration
           	Vehicle car_infront;
+          	*/
 
+          	/*
           	// Check where are the other cars in the road
           	for (int i=0; i<sensor_fusion.size(); ++i) {
 
@@ -389,6 +232,7 @@ int main() {
               }
           	  }
 
+
           	  // Check if the other car is in our lane
           	  // If it is too close, we need to change lane!
           	  if (other.d>lane*lane_width && other.d<(lane+1)*lane_width) {
@@ -406,6 +250,9 @@ int main() {
           	    }
           	   }
           	}
+         */
+
+
 
           	// Logic about changing lanes
 
@@ -582,165 +429,33 @@ int main() {
               }
           	}
 
-            // Reduce target velocity if we are too close to other cars
-            if (closest_car_distance < brake_distance) {
+          // Reduce target velocity if we are too close to other cars
+          if (closest_car_distance < brake_distance) {
 
-              if (ref_velocity > car_infront.getSpeed()) {
-                ref_velocity -= .2; // m/s
+            if (ref_velocity > car_infront.getSpeed()) {
+              ref_velocity -= .2; // m/s
 
-              } else {
-                ref_velocity += .2; // m/s
-              }
-
-            } else if (ref_velocity < max_velocity){
-              ref_velocity += .6;
+            } else {
+              ref_velocity += .2; // m/s
             }
 
-
-            // Trajectory generation
-
-            vector<double> next_x_vals;
-            vector<double> next_y_vals;
-
-            TrajectoryGenerator trajectoryGenerator = TrajectoryGenerator(car_x, car_y, car_yaw, car_s,
-                                                                          ref_velocity, lane,
-                                                                          map_waypoints_x, map_waypoints_y, map_waypoints_s,
-                                                                          previous_path_x, previous_path_y);
-
-            trajectoryGenerator.findTrajectory(next_x_vals, next_y_vals);
-
-       /*
-
-          	// Create a list of evenly spaced (x,y) points, using the previously calculated waypoints plus
-          	// some other future points
-          	// Then we will calculate a line that passes through all of them
-          	// Using the previous points helps in obtaining a smooth trajectory
-          	vector<double> ptsx;
-          	vector<double> ptsy;
-
-          	// Reference x, y, and yaw states
-          	// They will reference either the starting point at where the car is,
-          	// or at the previous path end-point
-          	double ref_x;
-          	double ref_y;
-          	double ref_yaw;
-
-          // First, calculate two points that are tangent to the current trajectory of the car
-          if (prev_size < 2) {
-            // If the previous points are almost empty (because the program has just started), use the cars position
-            ref_x = car_x;
-            ref_y = car_y;
-            ref_yaw = car_yaw;
-
-            double ref_x_prev = ref_x - cos(ref_yaw);
-            double ref_y_prev = ref_y - sin(ref_yaw);
-
-            ptsx.push_back(ref_x_prev);
-            ptsx.push_back(ref_x);
-
-            ptsy.push_back(ref_y_prev);
-            ptsy.push_back(ref_y);
+          } else if (ref_velocity < max_velocity){
+            ref_velocity += .6;
           }
 
-          else {
-            // Use the previous path's end point as starting reference
-            ref_x = previous_path_x[prev_size-1];
-            ref_y = previous_path_y[prev_size-1];
 
-            double ref_x_prev = previous_path_x[prev_size-2];
-            double ref_y_prev = previous_path_y[prev_size-2];
+          // Trajectory generation
 
-            ref_yaw = atan2(ref_y - ref_y_prev,
-                            ref_x - ref_x_prev);
+          vector<double> next_x_vals;
+          vector<double> next_y_vals;
 
-            ptsx.push_back(ref_x_prev);
-            ptsx.push_back(ref_x);
+          TrajectoryGenerator trajectoryGenerator = TrajectoryGenerator(car_x, car_y, car_yaw, car_s,
+                                                                        ref_velocity, lane,
+                                                                        map_waypoints_x, map_waypoints_y, map_waypoints_s,
+                                                                        previous_path_x, previous_path_y);
 
-            ptsy.push_back(ref_y_prev);
-            ptsy.push_back(ref_y);
-          }
+          trajectoryGenerator.findTrajectory(next_x_vals, next_y_vals);
 
-          // Second, add three "anchor" points, located at 30, 60 and 90 meters from car_s
-          // This helps to find a smooth trajectory
-          vector<double> next_wp0 = getXY(car_s+ 30, (lane*lane_width + lane_width/2), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-          vector<double> next_wp1 = getXY(car_s+ 60, (lane*lane_width + lane_width/2), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-          vector<double> next_wp2 = getXY(car_s+ 90, (lane*lane_width + lane_width/2), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-
-          ptsx.push_back(next_wp0[0]);
-          ptsx.push_back(next_wp1[0]);
-          ptsx.push_back(next_wp2[0]);
-
-          ptsy.push_back(next_wp0[1]);
-          ptsy.push_back(next_wp1[1]);
-          ptsy.push_back(next_wp2[1]);
-
-          // The trajectory points must be evenly located, to make the car travel at the desired velocity
-          // and they must fit in the trajectory of our previously calculated points.
-          // To fit them, we use spline http://kluge.in-chemnitz.de/opensource/spline/
-
-          // To help spline find a trajectory, we translate the coordinate system
-          // So that the ref_x, ref_y is at (0, 0), and its ref_yaw is 0 degrees
-          for (int i=0; i<ptsx.size(); ++i) {
-            // Shift
-            double shiftx = ptsx[i] - ref_x;
-            double shifty = ptsy[i] - ref_y;
-            // Rotation
-            ptsx[i] = (shiftx*cos(0-ref_yaw) - shifty*sin(0-ref_yaw));
-            ptsy[i] = (shiftx*sin(0-ref_yaw) + shifty*cos(0-ref_yaw));
-          }
-
-          // Create a spline
-          tk::spline s;
-          s.set_points(ptsx, ptsy);
-
-          	vector<double> next_x_vals;
-          	vector<double> next_y_vals;
-
-          // Add the previous calculated waypoints to the next trajectory
-          	// Adding previous path's points helps with transitions
-          	for (int i=0; i<prev_size; ++i) {
-          	  next_x_vals.push_back(previous_path_x[i]);
-          	  next_y_vals.push_back(previous_path_y[i]);
-          	}
-          	// After the previous waypoints, we have to add more points till we have "50" horizon points
-          	// Calculate how to break up spline points to go to the desired velocity
-          	double target_x = 30;
-          	double target_y = s(target_x);
-          	double target_distance = sqrt((target_x*target_x + target_y*target_y));
-
-          	// Fill in the rest of the path planner with points extrapolated from the spline
-          	double x_add_on = 0;
-          	for (int i=0; i<=horizon-prev_size; ++i) {
-          	  double step = ref_velocity / points_per_second;
-          	  double N = target_distance / step; // Number of "slots"
-          	  double x_next_new = x_add_on + (target_x/N); // Take one of those steps
-          	  double y_next_new = s(x_next_new);
-
-          	  x_add_on = x_next_new;
-
-          	  // Undo the previous translation
-          	  double curr_x_ref = x_next_new;
-          	  double curr_y_ref = y_next_new;
-
-          	  // Rotate points back to normal
-          	  x_next_new = (curr_x_ref*cos(ref_yaw) - curr_y_ref*sin(ref_yaw));
-          	  y_next_new = (curr_x_ref*sin(ref_yaw) + curr_y_ref*cos(ref_yaw));
-
-          	  //Shift back
-          	  x_next_new += ref_x;
-          	  y_next_new += ref_y;
-
-          	  next_x_vals.push_back(x_next_new);
-          	  next_y_vals.push_back(y_next_new);
-
-
-
-          	}
-
-
-       */
-
-          	// END
           	msgJson["next_x"] = next_x_vals;
           	msgJson["next_y"] = next_y_vals;
 

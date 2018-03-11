@@ -6,7 +6,6 @@
 */
 #include "utils.h"
 #include "spline.h"
-#include <vector>
 
 class TrajectoryGenerator {
  private:
@@ -15,6 +14,7 @@ class TrajectoryGenerator {
   double car_y;
   double car_yaw;
   double car_s;
+  double lane;
 
   // Waipoints we must follow
   vector<double> map_waypoints_x;
@@ -36,7 +36,7 @@ class TrajectoryGenerator {
   double ref_yaw;
 
   double ref_velocity;
-  double lane;
+
 
   // Previous calculated path, not used by the simulator yet
   vector<double> previous_path_x;
