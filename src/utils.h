@@ -172,6 +172,7 @@ class Vehicle {
   double vy;
   double yaw;
   double lane;
+  double speed;
 
   Vehicle(double x=0, double y=0, double s=0, double d=0) :
     x(x), y(y), s(s), d(d), id(-1) {
@@ -198,12 +199,13 @@ class Vehicle {
 void Vehicle::setVelocity(double vx, double vy) {
     this->vx = vx;
     this->vy = vy;
+    speed = sqrt(vx*vx + vy*vy);
   }
 void Vehicle::setId(double id) {
   this->id = id;
 }
 double Vehicle::getSpeed() {
-  return sqrt(vx*vx + vy*vy);
+  return speed;
 }
 
 class VehicleDetector {

@@ -857,6 +857,12 @@ utils.h
 /Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/utils.h
 trajectory_generator.cpp
 /Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/trajectory_generator.cpp
+path_planner.cpp
+/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/path_planner.cpp
+
+/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/path_planner.cpp
+utils.h
+/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/utils.h
 
 /Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/spline.h
 cstdio

@@ -37,7 +37,6 @@ class TrajectoryGenerator {
 
   double ref_velocity;
 
-
   // Previous calculated path, not used by the simulator yet
   vector<double> previous_path_x;
   vector<double> previous_path_y;

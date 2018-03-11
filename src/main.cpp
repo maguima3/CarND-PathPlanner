@@ -13,39 +13,12 @@
 #include "spline.h"
 #include "utils.h"
 #include "trajectory_generator.cpp"
+#include "path_planner.cpp"
 
 using namespace std;
 
 // for convenience
 using json = nlohmann::json;
-
-
-class Vehicle {
- private:
- public:
-  double id;
-  double x;
-  double y;
-  double s;
-  double d;
-  double vx;
-  double vy;
-  double yaw;
-
-  Vehicle(double x=0, double y=0, double s=0, double d=0) :
-    x(x), y(y), s(s), d(d), id(-1) {}
-
-  void setVelocity(double vx, double vy) {
-    this->vx = vx;
-    this->vy = vy;
-  }
-    void setId(double id) {
-    this->id = id;
-  }
-double getSpeed() {
-    return sqrt(vx*vx + vy*vy);
-  }
-};
 
 int main() {
   uWS::Hub h;
@@ -139,17 +112,8 @@ int main() {
           	// Define our car
           	Vehicle ego = Vehicle(car_x, car_y, car_s, car_d);
           	ego.setId(0);
-
-          	/*
-          	// Vehicles around our car
-          	vector<Vehicle> cars_left_ahead;
-          vector<Vehicle> cars_center_ahead;
-          vector<Vehicle> cars_right_ahead;
-
-          vector<Vehicle> cars_left_behind;
-          vector<Vehicle> cars_center_behind;
-          vector<Vehicle> cars_right_behind;
-          */
+          	ego.speed = car_speed;
+          	ego.yaw = car_yaw;
 
           	// Number of waypoints calculated in the last iteration, which the car didn't go through
           	// Would be a number close to 50 (e.g 47)
@@ -172,88 +136,10 @@ int main() {
           bool change_lane = detector.infront_tooClose;
           Vehicle car_infront = detector.getCarInfront();
 
-          	/*
-          	bool change_lane = false; // Flag
-          	const double min_gap = 50.0; // Minimum distance between two vehicles (gap)
-          	const double sensor_range = 100.0; // Range in which other vehicles are detected [m]
-          	const double safety_distance = 30.0; // There's risk of collision if other cars are closer [meters]
-          	const double safety_distance_behind = 5.0;
-          	const double brake_distance = 30.0; // Break if there is any car closer
+          PathPlanner planner = PathPlanner(ego, detector, car_s, prev_size);
+          lane = planner.nextLane();
 
-
-          	double closest_car_distance = 20000000; // Indicates the distance of the closest car in our lane. Controls acceleration
-          	Vehicle car_infront;
-          	*/
-
-          	/*
-          	// Check where are the other cars in the road
-          	for (int i=0; i<sensor_fusion.size(); ++i) {
-
-          	  double other_id = sensor_fusion[i][0];
-          	  double other_x = sensor_fusion[i][1];
-          	  double other_y = sensor_fusion[i][2];
-          	  double other_vx = sensor_fusion[i][3];
-          	  double other_vy = sensor_fusion[i][4];
-          	  double other_s = sensor_fusion[i][5];
-          	  double other_d = sensor_fusion[i][6];
-
-          	  Vehicle other = Vehicle(other_x, other_y, other_s, other_d);
-          	  other.setVelocity(other_vx, other_vy);
-          	  other.setId(other_id);
-
-          	  double diff = other.s - ego.s;
-          	  bool is_ahead = (diff > 0);
-          	  bool is_detectable = (abs(diff) <= sensor_range);
-
-          	  // Calculate the lane of the other car
-          	  if (other.d < lane_width) { // left lane
-
-          	    if (is_ahead && is_detectable) {
-          	      cars_left_ahead.push_back(other);
-          	    }
-          	    else if (!is_ahead && is_detectable) {
-          	      cars_left_behind.push_back(other);
-          	    }
-          	  }
-          	  else if (other.d > lane_width && other.d < 2*lane_width) { // center line
-          	    if (is_ahead && is_detectable) {
-                cars_center_ahead.push_back(other);
-              }
-              else if (!is_ahead && is_detectable) {
-                cars_center_behind.push_back(other);
-              }
-          	  }
-          	  else if (other.d > 2*lane_width) { //right lane
-          	    if (is_ahead && is_detectable) {
-                cars_right_ahead.push_back(other);
-              }
-              else if (!is_ahead && is_detectable) {
-                cars_right_behind.push_back(other);
-              }
-          	  }
-
-
-          	  // Check if the other car is in our lane
-          	  // If it is too close, we need to change lane!
-          	  if (other.d>lane*lane_width && other.d<(lane+1)*lane_width) {
-          	    double car_infront_distance = abs(other.s-ego.s);
-          	    bool is_too_close = (is_ahead) && (car_infront_distance < min_gap);
-
-          	    if (is_too_close) {
-          	      change_lane = true;
-          	      car_infront = other;
-
-          	      // Update the distance with the car in front
-          	      if (car_infront_distance < closest_car_distance){
-                  closest_car_distance = car_infront_distance;
-                }
-          	    }
-          	   }
-          	}
-         */
-
-
-
+          /*
           	// Logic about changing lanes
 
           // Predict other cars position in the future (if we are using previous waypoints)
@@ -428,9 +314,10 @@ int main() {
                 }
               }
           	}
+          	*/
 
           // Reduce target velocity if we are too close to other cars
-          if (closest_car_distance < brake_distance) {
+          if (detector.closest_car_distance < brake_distance) {
 
             if (ref_velocity > car_infront.getSpeed()) {
               ref_velocity -= .2; // m/s
