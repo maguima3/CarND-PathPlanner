@@ -162,6 +162,8 @@ CMakeFiles/path_planning.dir/main.cpp.o: /Users/mariaguinea/Workspace/CarND/Term
 CMakeFiles/path_planning.dir/main.cpp.o: /Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/json.hpp
 CMakeFiles/path_planning.dir/main.cpp.o: /Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/main.cpp
 CMakeFiles/path_planning.dir/main.cpp.o: /Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/spline.h
+CMakeFiles/path_planning.dir/main.cpp.o: /Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/trajectory_generator.cpp
+CMakeFiles/path_planning.dir/main.cpp.o: /Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/utils.h
 CMakeFiles/path_planning.dir/main.cpp.o: /usr/local/include/pthread-barrier.h
 CMakeFiles/path_planning.dir/main.cpp.o: /usr/local/include/uWS/Extensions.h
 CMakeFiles/path_planning.dir/main.cpp.o: /usr/local/include/uWS/Group.h

@@ -831,6 +831,8 @@ vector
 /Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/main.cpp
 fstream
 -
+stdio.h
+-
 math.h
 -
 uWS/uWS.h
@@ -851,6 +853,10 @@ json.hpp
 /Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/json.hpp
 spline.h
 /Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/spline.h
+utils.h
+/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/utils.h
+trajectory_generator.cpp
+/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/trajectory_generator.cpp
 
 /Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/spline.h
 cstdio
@@ -861,6 +867,14 @@ vector
 -
 algorithm
 -
+
+/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/trajectory_generator.cpp
+utils.h
+/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/utils.h
+spline.h
+/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/spline.h
+
+/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/utils.h
 
 /usr/local/include/pthread-barrier.h
 errno.h
