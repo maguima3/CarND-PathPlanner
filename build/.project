@@ -147,6 +147,31 @@
 			<location>/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/main.cpp</location>
 		</link>
 		<link>
+			<name>[Targets]/[exe] path_planning/Source Files/utils.cpp</name>
+			<type>1</type>
+			<location>/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/utils.cpp</location>
+		</link>
+		<link>
+			<name>[Targets]/[exe] path_planning/Source Files/vehicle.cpp</name>
+			<type>1</type>
+			<location>/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/vehicle.cpp</location>
+		</link>
+		<link>
+			<name>[Targets]/[exe] path_planning/Source Files/vehicle_detector.cpp</name>
+			<type>1</type>
+			<location>/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/vehicle_detector.cpp</location>
+		</link>
+		<link>
+			<name>[Targets]/[exe] path_planning/Source Files/trajectory_generator.cpp</name>
+			<type>1</type>
+			<location>/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/trajectory_generator.cpp</location>
+		</link>
+		<link>
+			<name>[Targets]/[exe] path_planning/Source Files/path_planner.cpp</name>
+			<type>1</type>
+			<location>/Users/mariaguinea/Workspace/CarND/Term3/Projects/1_PathPlanning/src/path_planner.cpp</location>
+		</link>
+		<link>
 			<name>[Targets]/[exe] path_planning/Header Files</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>

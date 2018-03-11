@@ -150,6 +150,141 @@ main.cpp.s:
 	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+path_planner.o: path_planner.cpp.o
+
+.PHONY : path_planner.o
+
+# target to build an object file
+path_planner.cpp.o:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/path_planner.cpp.o
+.PHONY : path_planner.cpp.o
+
+path_planner.i: path_planner.cpp.i
+
+.PHONY : path_planner.i
+
+# target to preprocess a source file
+path_planner.cpp.i:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/path_planner.cpp.i
+.PHONY : path_planner.cpp.i
+
+path_planner.s: path_planner.cpp.s
+
+.PHONY : path_planner.s
+
+# target to generate assembly for a file
+path_planner.cpp.s:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/path_planner.cpp.s
+.PHONY : path_planner.cpp.s
+
+trajectory_generator.o: trajectory_generator.cpp.o
+
+.PHONY : trajectory_generator.o
+
+# target to build an object file
+trajectory_generator.cpp.o:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/trajectory_generator.cpp.o
+.PHONY : trajectory_generator.cpp.o
+
+trajectory_generator.i: trajectory_generator.cpp.i
+
+.PHONY : trajectory_generator.i
+
+# target to preprocess a source file
+trajectory_generator.cpp.i:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/trajectory_generator.cpp.i
+.PHONY : trajectory_generator.cpp.i
+
+trajectory_generator.s: trajectory_generator.cpp.s
+
+.PHONY : trajectory_generator.s
+
+# target to generate assembly for a file
+trajectory_generator.cpp.s:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/trajectory_generator.cpp.s
+.PHONY : trajectory_generator.cpp.s
+
+utils.o: utils.cpp.o
+
+.PHONY : utils.o
+
+# target to build an object file
+utils.cpp.o:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/utils.cpp.o
+.PHONY : utils.cpp.o
+
+utils.i: utils.cpp.i
+
+.PHONY : utils.i
+
+# target to preprocess a source file
+utils.cpp.i:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/utils.cpp.i
+.PHONY : utils.cpp.i
+
+utils.s: utils.cpp.s
+
+.PHONY : utils.s
+
+# target to generate assembly for a file
+utils.cpp.s:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/utils.cpp.s
+.PHONY : utils.cpp.s
+
+vehicle.o: vehicle.cpp.o
+
+.PHONY : vehicle.o
+
+# target to build an object file
+vehicle.cpp.o:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/vehicle.cpp.o
+.PHONY : vehicle.cpp.o
+
+vehicle.i: vehicle.cpp.i
+
+.PHONY : vehicle.i
+
+# target to preprocess a source file
+vehicle.cpp.i:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/vehicle.cpp.i
+.PHONY : vehicle.cpp.i
+
+vehicle.s: vehicle.cpp.s
+
+.PHONY : vehicle.s
+
+# target to generate assembly for a file
+vehicle.cpp.s:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/vehicle.cpp.s
+.PHONY : vehicle.cpp.s
+
+vehicle_detector.o: vehicle_detector.cpp.o
+
+.PHONY : vehicle_detector.o
+
+# target to build an object file
+vehicle_detector.cpp.o:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/vehicle_detector.cpp.o
+.PHONY : vehicle_detector.cpp.o
+
+vehicle_detector.i: vehicle_detector.cpp.i
+
+.PHONY : vehicle_detector.i
+
+# target to preprocess a source file
+vehicle_detector.cpp.i:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/vehicle_detector.cpp.i
+.PHONY : vehicle_detector.cpp.i
+
+vehicle_detector.s: vehicle_detector.cpp.s
+
+.PHONY : vehicle_detector.s
+
+# target to generate assembly for a file
+vehicle_detector.cpp.s:
+	$(MAKE) -f CMakeFiles/path_planning.dir/build.make CMakeFiles/path_planning.dir/vehicle_detector.cpp.s
+.PHONY : vehicle_detector.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -162,6 +297,21 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... path_planner.o"
+	@echo "... path_planner.i"
+	@echo "... path_planner.s"
+	@echo "... trajectory_generator.o"
+	@echo "... trajectory_generator.i"
+	@echo "... trajectory_generator.s"
+	@echo "... utils.o"
+	@echo "... utils.i"
+	@echo "... utils.s"
+	@echo "... vehicle.o"
+	@echo "... vehicle.i"
+	@echo "... vehicle.s"
+	@echo "... vehicle_detector.o"
+	@echo "... vehicle_detector.i"
+	@echo "... vehicle_detector.s"
 .PHONY : help
 
 
