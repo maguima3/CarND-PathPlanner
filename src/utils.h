@@ -22,7 +22,7 @@ const double points_per_second = 50; // The car visits one point every .02 secon
 const double lane_width = 4.0; //in meters
 
 const double min_gap = 25.0; // Minimum distance between two vehicles (gap) // 50?
-const double sensor_range = 150.0; // Range in which other vehicles are detected [m] // 100?
+const double sensor_range = 50.0; // Range in which other vehicles are detected [m] // 100?
 const double safety_distance = min_gap; // There's risk of collision if other cars are closer [meters] //  30?
 const double safety_distance_behind = 6.0;//
 const double brake_distance = 30.0; // Break if there is any car closer.

@@ -42,6 +42,7 @@ class PathPlanner {
   bool isChangeLeftSafe();
   bool isChangeRightSafe();
 
+  // Penalizes changing to left or right lane
   double speedBuffer = 0.5;
 
  public:

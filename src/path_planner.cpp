@@ -84,65 +84,72 @@ double PathPlanner::nextLane() {
   //car_infront.speed = 2000.0; // If there is no car in front, assume that the speed of a "not-car" is huge
   detector.getCarInfront(car_infront);
 
-
+  // Current lane is left or right
   if (current_lane != 1) {
     if (isChangeCenterSafe()) {
-      printf("Center ahead id: %f\n", centerAhead.id);
+      // If there is no car in the center, change to the center lane
+      // Valid cars have positive id (negative id means no car)
       if (centerAhead.id < 0.0) {
         next_lane = 1.0;
       }
       else {
+        // Move to the center lane if it moves relatively faster
+        // Even if the center lane is a little bit slower (speed_buffer m/s slower),
+        // is better to move to the center, as if offer more possibilities to change
+
         //printf("Speed of the car in the center: %f\n", centerAhead.speed);
-        //printf("Speed of the car in front: %f\n", car_infront.speed+speedBuffer);
-        //next_lane = (centerAhead.speed>car_infront.speed+speedBuffer) ? 1.0 : current_lane;
+        //printf("Speed of the car in front: %f\n", car_infront.speed);
         next_lane = (centerAhead.speed+speedBuffer>car_infront.speed) ? 1.0 : current_lane;
       }
     }
+    // If is not safe to move, keep in the current lane
     else {
       next_lane = current_lane;
     }
   }
+  // Center lane
   else {
+    Vehicle car_ahead_left = leftAhead;
+    Vehicle car_ahead_right = rightAhead;
+
     bool left_change = isChangeLeftSafe();
     bool right_change = isChangeRightSafe();
 
-    // Now decide if we move to the left or to the right
-    if (left_change && !right_change) {
-      next_lane = 0.0;
-    }
-    else if (!left_change && right_change) {
-      next_lane = 2.0;
-    }
-    else if (left_change && right_change) {
-      Vehicle car_ahead_left = leftAhead;
-      Vehicle car_ahead_right = rightAhead;
+    // Check if the other lanes are faster
+    // Prioritize to stay in the center
+    bool car_left_faster = (car_ahead_left.speed>car_infront.speed+speedBuffer) ? true : false;
+    bool car_right_faster = (car_ahead_right.speed>car_infront.speed+speedBuffer) ? true : false;
 
-      // Move to other line if the vehicles are faster than the car in front of us
-      bool car_left_faster = (car_ahead_left.speed>car_infront.speed+speedBuffer) ? true : false;
-      bool car_right_faster = (car_ahead_right.speed>car_infront.speed+speedBuffer) ? true : false;
-
+    // If it is not safe to move, stay
+    if (!left_change && !right_change) {
+      next_lane = current_lane;
+    }
+    else {
+      // If one lane is empty ahead, move to it
       // Valid cars have positive id (negative id means no car)
-      if (car_ahead_left.id < 0.0 || car_ahead_right.id < 0.0) {
-        // Try to move to the left
-        next_lane = car_ahead_left.id<0 ? 0 : 2;
-      }
-      else if (car_left_faster && !car_right_faster) {
+      // Prioritize moving left (normal traffic rule)
+      if ((left_change && car_ahead_left.id < 0.0)) {
         next_lane = 0.0;
       }
-      else if (!car_left_faster && car_right_faster) {
-        next_lane = 2.0;
+      else if ((right_change && car_ahead_right.id < 0.0)) {
+        next_lane = 2;
       }
-      else if (car_left_faster && car_right_faster) {
-        // Move to the lane with the fastest car ahead
+      // Move to the lane with the fastest car ahead
+      else if (left_change && car_left_faster && right_change && car_right_faster) {
          next_lane = (car_ahead_left.speed>car_ahead_right.speed) ? 0 : 2;
-
+      }
+      else if (left_change && car_left_faster) {
+        next_lane = 0.0;
+      }
+      else if (right_change && car_right_faster) {
+        next_lane = 2.0;
       }
       else if (!car_left_faster && !car_right_faster){
         // Cars on the left and right are slower. Better keep in the middle
-        next_lane = 0;
+        next_lane = current_lane;
       }
     }
   }
-  printf("NEXT LANE %d\n", (int)next_lane);
+  printf("NEXT LANE: %d\n", (int)next_lane);
   return next_lane;
 }
