@@ -29,7 +29,7 @@ bool PathPlanner::isCarBehind(double min_distance_behind) {
 double PathPlanner::getMinDistanceAhead(vector<Vehicle>cars_ahead, Vehicle &ahead) {
   double min_distance_ahead = sensor_range;
   for (auto other = cars_ahead.begin(); other!=cars_ahead.end(); ++other) {
-    double other_future_s = other->s + other->getSpeed() * prev_size / points_per_second;
+    double other_future_s = other->getS() + other->getSpeed() * prev_size / points_per_second;
     double distance = abs(other_future_s-car_s);
 //    printf("Ahead - %f\t", distance);
     if (distance<min_distance_ahead) {
@@ -43,7 +43,7 @@ double PathPlanner::getMinDistanceAhead(vector<Vehicle>cars_ahead, Vehicle &ahea
 double PathPlanner::getMinDistanceBehind(vector<Vehicle>cars_behind) {
   double min_distance_behind = sensor_range;
   for (auto other = cars_behind.begin(); other!=cars_behind.end(); ++other) {
-    double other_future_s = other->s + other->getSpeed() * prev_size / points_per_second;
+    double other_future_s = other->getS() + other->getSpeed() * prev_size / points_per_second;
     double distance = abs(other_future_s-car_s);
 //    printf("\nBehind - %f\t", distance);
     if (distance<min_distance_behind) {
@@ -54,21 +54,21 @@ double PathPlanner::getMinDistanceBehind(vector<Vehicle>cars_behind) {
 }
 
 bool PathPlanner::isChangeCenterSafe() {
-  printf("Center ?");
+  printf("Center?\n");
   double min_distance_ahead = getMinDistanceAhead(detector.cars_center_ahead, centerAhead);
   double min_distance_behind = getMinDistanceBehind(detector.cars_center_behind);
   return (!isCarAhead(min_distance_ahead) && !isCarBehind(min_distance_behind));
 }
 
 bool PathPlanner::isChangeLeftSafe() {
-  printf("Left ?");
+  printf("Left?\n");
   double min_distance_ahead = getMinDistanceAhead(detector.cars_left_ahead, leftAhead);
   double min_distance_behind = getMinDistanceBehind(detector.cars_left_behind);
   return (!isCarAhead(min_distance_ahead) && !isCarBehind(min_distance_behind));
 }
 
 bool PathPlanner::isChangeRightSafe() {
-  printf("Right ?");
+  printf("Right?\n");
   double min_distance_ahead = getMinDistanceAhead(detector.cars_right_ahead, rightAhead);
   double min_distance_behind = getMinDistanceBehind(detector.cars_right_behind);
   return (!isCarAhead(min_distance_ahead) && !isCarBehind(min_distance_behind));
@@ -81,7 +81,6 @@ double PathPlanner::nextLane() {
   double next_lane = current_lane;
 
   Vehicle car_infront;
-  //car_infront.speed = 2000.0; // If there is no car in front, assume that the speed of a "not-car" is huge
   detector.getCarInfront(car_infront);
 
   // Current lane is left or right
@@ -89,7 +88,7 @@ double PathPlanner::nextLane() {
     if (isChangeCenterSafe()) {
       // If there is no car in the center, change to the center lane
       // Valid cars have positive id (negative id means no car)
-      if (centerAhead.id < 0.0) {
+      if (centerAhead.getId() < 0.0) {
         next_lane = 1.0;
       }
       else {
@@ -99,7 +98,7 @@ double PathPlanner::nextLane() {
 
         //printf("Speed of the car in the center: %f\n", centerAhead.speed);
         //printf("Speed of the car in front: %f\n", car_infront.speed);
-        next_lane = (centerAhead.speed+speedBuffer>car_infront.speed) ? 1.0 : current_lane;
+        next_lane = (centerAhead.getSpeed()+speedBuffer>car_infront.getSpeed()) ? 1.0 : current_lane;
       }
     }
     // If is not safe to move, keep in the current lane
@@ -109,16 +108,18 @@ double PathPlanner::nextLane() {
   }
   // Center lane
   else {
-    Vehicle car_ahead_left = leftAhead;
-    Vehicle car_ahead_right = rightAhead;
-
+    // Need to check if left/right are safe first, to get correct ids!!
     bool left_change = isChangeLeftSafe();
     bool right_change = isChangeRightSafe();
 
+    Vehicle car_ahead_left = leftAhead;
+    Vehicle car_ahead_right = rightAhead;
+
+
     // Check if the other lanes are faster
     // Prioritize to stay in the center
-    bool car_left_faster = (car_ahead_left.speed>car_infront.speed+speedBuffer) ? true : false;
-    bool car_right_faster = (car_ahead_right.speed>car_infront.speed+speedBuffer) ? true : false;
+    bool car_left_faster = (car_ahead_left.getSpeed()>car_infront.getSpeed()+speedBuffer) ? true : false;
+    bool car_right_faster = (car_ahead_right.getSpeed()>car_infront.getSpeed()+speedBuffer) ? true : false;
 
     // If it is not safe to move, stay
     if (!left_change && !right_change) {
@@ -128,15 +129,15 @@ double PathPlanner::nextLane() {
       // If one lane is empty ahead, move to it
       // Valid cars have positive id (negative id means no car)
       // Prioritize moving left (normal traffic rule)
-      if ((left_change && car_ahead_left.id < 0.0)) {
+      if ((left_change && car_ahead_left.getId() < 0.0)) {
         next_lane = 0.0;
       }
-      else if ((right_change && car_ahead_right.id < 0.0)) {
+      else if ((right_change && car_ahead_right.getId() < 0.0)) {
         next_lane = 2;
       }
       // Move to the lane with the fastest car ahead
       else if (left_change && car_left_faster && right_change && car_right_faster) {
-         next_lane = (car_ahead_left.speed>car_ahead_right.speed) ? 0 : 2;
+         next_lane = (car_ahead_left.getSpeed()>car_ahead_right.getSpeed()) ? 0 : 2;
       }
       else if (left_change && car_left_faster) {
         next_lane = 0.0;
