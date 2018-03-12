@@ -10,6 +10,7 @@
 
 #include "vehicle.h"
 #include "vehicle_detector.h"
+#include "utils.h"
 #include <vector>
 using namespace std;
 
@@ -43,7 +44,7 @@ class PathPlanner {
   bool isChangeRightSafe();
 
   // Penalizes changing to left or right lane
-  double speedBuffer = 0.5;
+  double speedBuffer = 1.0;
 
  public:
 

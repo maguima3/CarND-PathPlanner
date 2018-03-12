@@ -58,6 +58,9 @@ class TrajectoryGenerator {
                       vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s,
                       vector<double> previous_path_x, vector<double> previous_path_y);
 
+  // Returns the (x, y) points of the future trajectory
+  // Fits with a spline the previous points and three anchor points in the future,
+  // which help finding a smooth trajectory
   void findTrajectory(vector<double> &next_x_vals, vector<double> &next_y_vals);
 
 };

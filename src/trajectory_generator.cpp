@@ -73,6 +73,8 @@ void TrajectoryGenerator::setAnchorPoints() {
   ptsy.push_back(next_wp2[1]);
 }
 
+// Finds a trajectory
+// Follows the description of the walkthrough
 void TrajectoryGenerator::findTrajectory(vector<double> &next_x_vals, vector<double> &next_y_vals) {
 
   setReferencePoints();

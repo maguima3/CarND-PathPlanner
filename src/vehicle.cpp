@@ -31,10 +31,21 @@ void Vehicle::setVelocity(double vx, double vy) {
 void Vehicle::setId(double id) {
   this->id = id;
 }
+double Vehicle::getId() {
+  return id;
+}
 double Vehicle::getSpeed() {
   return speed;
 }
-
+void Vehicle::setSpeed(double speed) {
+  this->speed = speed;
+}
+void Vehicle::setYaw(double yaw) {
+  this->yaw = yaw;
+}
+double Vehicle::getS() {
+  return s;
+}
 double Vehicle::getLane() {
   if (d < lane_width) { // left lane
     lane = 0.0;

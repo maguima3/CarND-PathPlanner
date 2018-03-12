@@ -12,7 +12,6 @@
 
 class Vehicle {
  private:
- public:
   double id;
   double x;
   double y;
@@ -24,12 +23,18 @@ class Vehicle {
   double lane;
   double speed;
 
+ public:
   Vehicle(double x=0, double y=0, double s=0, double d=0);
 
   void setVelocity(double vx, double vy);
   void setId(double id);
+  double getId();
   double getSpeed();
+  void setSpeed(double speed);
   double getLane();
+  void setYaw(double yaw);
+  double getS();
+
 };
 
 

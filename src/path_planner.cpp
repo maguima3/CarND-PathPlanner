@@ -96,15 +96,15 @@ double PathPlanner::nextLane() {
         // Even if the center lane is a little bit slower (speed_buffer m/s slower),
         // is better to move to the center, as if offer more possibilities to change
 
-        //printf("Speed of the car in the center: %f\n", centerAhead.speed);
-        //printf("Speed of the car in front: %f\n", car_infront.speed);
+        printf("Speed of the car in the center: %f\n", centerAhead.getSpeed());
+        printf("Speed of the car in front: %f\n", car_infront.getSpeed());
         next_lane = (centerAhead.getSpeed()+speedBuffer>car_infront.getSpeed()) ? 1.0 : current_lane;
       }
     }
     // If is not safe to move, keep in the current lane
-    else {
-      next_lane = current_lane;
-    }
+//    else {
+//      next_lane = current_lane;
+//    }
   }
   // Center lane
   else {
@@ -115,17 +115,7 @@ double PathPlanner::nextLane() {
     Vehicle car_ahead_left = leftAhead;
     Vehicle car_ahead_right = rightAhead;
 
-
-    // Check if the other lanes are faster
-    // Prioritize to stay in the center
-    bool car_left_faster = (car_ahead_left.getSpeed()>car_infront.getSpeed()+speedBuffer) ? true : false;
-    bool car_right_faster = (car_ahead_right.getSpeed()>car_infront.getSpeed()+speedBuffer) ? true : false;
-
-    // If it is not safe to move, stay
-    if (!left_change && !right_change) {
-      next_lane = current_lane;
-    }
-    else {
+    if (left_change || right_change) {
       // If one lane is empty ahead, move to it
       // Valid cars have positive id (negative id means no car)
       // Prioritize moving left (normal traffic rule)
@@ -133,7 +123,29 @@ double PathPlanner::nextLane() {
         next_lane = 0.0;
       }
       else if ((right_change && car_ahead_right.getId() < 0.0)) {
-        next_lane = 2;
+        next_lane = 2.0;
+      }
+
+      // Check the space ahead in the other lines
+      double left_future_s = leftAhead.getS() + leftAhead.getSpeed() * prev_size / points_per_second;
+      double distance_left = abs(left_future_s-car_s);
+      double right_future_s = rightAhead.getS() + rightAhead.getSpeed() * prev_size / points_per_second;
+      double distance_right = abs(right_future_s-car_s);
+
+      bool bigSpaceLeft = distance_left>3*safety_distance;
+      bool bigSpaceRight = distance_right>3*safety_distance;
+
+      // Check if the other lanes are faster
+      // Prioritize to stay in the center
+      bool car_left_faster = (car_ahead_left.getSpeed()>car_infront.getSpeed()+speedBuffer) ? true : false;
+      bool car_right_faster = (car_ahead_right.getSpeed()>car_infront.getSpeed()+speedBuffer) ? true : false;
+
+      // Move to the lane with more space ahead
+      if (left_change && bigSpaceLeft) {
+        next_lane = 0.0;
+      }
+      else if (right_change && bigSpaceRight) {
+        next_lane = 2.0;
       }
       // Move to the lane with the fastest car ahead
       else if (left_change && car_left_faster && right_change && car_right_faster) {
