@@ -20,10 +20,10 @@ class VehicleDetector {
   Vehicle car_infront;
 
  public:
-  VehicleDetector(Vehicle ego, double lane, vector<vector<double>> sensor_fusion);
+  VehicleDetector(Vehicle &ego, double lane, vector<vector<double>> sensor_fusion);
 
-  bool static infront_tooClose;
-  double static closest_car_distance;
+  bool infront_tooClose;
+  double closest_car_distance;
 
   // Vehicles around ego car
   vector<Vehicle> cars_left_ahead;

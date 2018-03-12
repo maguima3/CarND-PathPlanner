@@ -122,7 +122,7 @@ int main() {
           	Vehicle ego = Vehicle(car_x, car_y, car_s, car_d);
           	ego.setId(0);
           	ego.speed = car_speed;
-          //	ego.lane = lane;
+          	ego.lane = lane;
           	ego.yaw = car_yaw;
 
           	// Number of waypoints calculated in the last iteration, which the car didn't go through
@@ -136,29 +136,34 @@ int main() {
 
           	VehicleDetector detector = VehicleDetector(ego, lane, sensor_fusion);
 
-          PathPlanner planner = PathPlanner(ego, detector, car_s, prev_size);
-          lane = planner.nextLane();
+          	if (detector.infront_tooClose) {
+            PathPlanner planner = PathPlanner(lane, detector, car_s, prev_size);
+            lane = planner.nextLane();
+          	}
 
-          printf("Next lane %f \n", lane);
+          //printf("Next lane %f \n", lane);
 
           Vehicle car_infront;
           bool isCarInfront = detector.getCarInfront(car_infront);
 
-          printf("Car in front %d \n", isCarInfront);
+          //printf("Car in front %d \n", isCarInfront);
 
           // Reduce target velocity if we are too close to other cars
-          if (detector.closest_car_distance < brake_distance) {
 
-            printf("Closest car at %f \n", detector.closest_car_distance);
-            printf("Break!");
-            if (ref_velocity > car_infront.speed) {
-              ref_velocity -= .2; // m/s
-            } else {
-              ref_velocity += .2; // m/s
+          if (detector.closest_car_distance < brake_distance) {
+            printf("Break! ");
+            if (detector.closest_car_distance < danger_distance) {
+              cout << "Danger! Collision\n";
+              ref_velocity -= .5;
+            }
+            else if (ref_velocity > car_infront.speed) {
+              ref_velocity -= .3; // m/s
+            } else if (ref_velocity < car_infront.speed && car_infront.speed < max_velocity) {
+              ref_velocity += .1; // m/s
             }
 
           } else if (ref_velocity < max_velocity){
-            ref_velocity += .2;
+            ref_velocity += .3;
           }
 
 

@@ -7,13 +7,15 @@
 
 #include "vehicle_detector.h"
 
-bool VehicleDetector::infront_tooClose = false;
-double VehicleDetector::closest_car_distance = 2000000000;
+//bool VehicleDetector::infront_tooClose = false;
+//double VehicleDetector::closest_car_distance = 2000000000;
 
-VehicleDetector::VehicleDetector(Vehicle ego, double lane, vector<vector<double>> sensor_fusion) {
+VehicleDetector::VehicleDetector(Vehicle &ego, double lane, vector<vector<double>> sensor_fusion) {
 
   this->ego = ego;
   this->lane = lane;
+  this->infront_tooClose = false;
+  this->closest_car_distance = 2000.0;
 
   // Check where are the other cars in the road
   for (int i=0; i<sensor_fusion.size(); ++i) {
@@ -35,7 +37,7 @@ VehicleDetector::VehicleDetector(Vehicle ego, double lane, vector<vector<double>
     bool is_detectable = (abs(diff) <= sensor_range);
 
     // Calculate the lane of the other car
-    if (other.lane == 0.0) {
+    if (other.getLane() == 0.0) {
       if (is_ahead && is_detectable) {
         cars_left_ahead.push_back(other);
       }
@@ -44,7 +46,7 @@ VehicleDetector::VehicleDetector(Vehicle ego, double lane, vector<vector<double>
       }
     }
 
-    else if (other.lane == 1.0) {
+    else if (other.getLane() == 1.0) {
       if (is_ahead && is_detectable) {
         cars_center_ahead.push_back(other);
       }
@@ -53,7 +55,7 @@ VehicleDetector::VehicleDetector(Vehicle ego, double lane, vector<vector<double>
       }
     }
 
-    else if (other.lane == 2.0) {
+    else if (other.getLane() == 2.0) {
       if (is_ahead && is_detectable) {
         cars_right_ahead.push_back(other);
       }
@@ -64,16 +66,21 @@ VehicleDetector::VehicleDetector(Vehicle ego, double lane, vector<vector<double>
 
     // Check if the other car is in our lane
     // If it is too close, we need to change lane!
-    if (other.lane == lane) {
-      double distance = abs(other.s-ego.s);
-      infront_tooClose = (is_ahead) && (distance < min_gap);
+    if (other.getLane() == lane) {
 
-      if (infront_tooClose) {
+      double distance = abs(other.s-ego.s);
+      //infront_tooClose = (is_ahead) && (distance < min_gap);
+
+      if ((is_ahead) && (distance < min_gap)) {
+        printf("Vehicle too close! Distance %f\n", distance);
+//        printf("Lane: Other %f \t Ego %f\n", other.lane, lane);
+        infront_tooClose = true;
         car_infront = other;
 
         // Update the distance with the car in front
         if (distance < closest_car_distance){
           closest_car_distance = distance;
+
         }
       }
     }

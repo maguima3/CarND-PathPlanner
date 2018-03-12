@@ -15,8 +15,10 @@ using namespace std;
 
 class PathPlanner {
  private:
-  Vehicle ego;
+//  Vehicle ego;
   VehicleDetector detector;
+
+  double lane;
 
   // Ego car s value in the future (if there are points unused in the previous path)
   // If there is not previous path, then it is the current s position of ego
@@ -44,7 +46,7 @@ class PathPlanner {
 
  public:
 
-  PathPlanner(Vehicle ego, VehicleDetector &detector, double car_s, double prev_size);
+  PathPlanner(double lane, VehicleDetector &detector, double car_s, double prev_size);
   double nextLane();
 };
 

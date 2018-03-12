@@ -36,5 +36,16 @@ double Vehicle::getSpeed() {
 }
 
 double Vehicle::getLane() {
+  if (d < lane_width) { // left lane
+    lane = 0.0;
+  }
+
+  else if (d>lane_width && d<2*lane_width) { // center line
+    lane = 1.0;
+  }
+
+  else if (d>2*lane_width) { //right lane
+    lane = 2.0;
+  }
   return lane;
 }
