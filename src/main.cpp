@@ -140,11 +140,11 @@ int main() {
             printf("Break!\n");
             if (detector.closest_car_distance < danger_distance) {
               cout << "Danger! Collision\n";
-              ref_velocity -= .5;
+              ref_velocity -= .8;
             }
-            else if (ref_velocity > car_infront.speed) {
-              ref_velocity -= .3; // m/s
-            } else if (ref_velocity < car_infront.speed && car_infront.speed < max_velocity) {
+            else if (ref_velocity > car_infront.getSpeed()) {
+              ref_velocity -= .5; // m/s
+            } else if (ref_velocity < car_infront.getSpeed() && car_infront.getSpeed() < max_velocity) {
               ref_velocity += .1; // m/s
             }
           // Try to reach the max velocity if there are not cars too close
