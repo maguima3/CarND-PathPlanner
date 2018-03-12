@@ -66,6 +66,36 @@ A really helpful resource for doing this project and creating smooth trajectorie
 
 ---
 
+## Rubric Points
+
+### The car is able to drive at least 4.32 miles without incident
+I have successfully driven more than 20 minutes without incidents.
+
+### Reflection: how to generate paths
+Generating paths seems to be the hardest part of this project, as there are several requirements for safety and comfort that need to be met: no collisions, max acceleration of 10 m/s^2, max jerk of 10 m/s^3, not staying between lanes more than 3 seconds.
+
+Due to the problems that other students reported, I have followed the approach described in the walkthrough video. That is, I have used splines to generate my trajectories. To create smooth paths, we set three anchor points in the future (in my case 30, 60 and 90 meters ahead) and we add the points of the previous path. This method has proven to work really good, and it is very easy to implement.
+
+The implementation of the trajectory generations is in ``trajectory_generator.cpp``.
+
+### Implementation details
+The details are described in the source files. I will write them here in the next days..
+
+The source files include:
+
+* main.cpp - communicates with the simulator
+* utils.cpp - includes help functions (e.g coordinate transformations)
+* vehicle.cpp - defines a vehicle
+* vehicle_detector.cpp - detects vehicles around the ego car. It also detect if they are too close
+* trajectory_generator.cpp - generates a smooth trajectory using splines (see above)
+* path_planner.cpp - where all the logic about changing lanes is. The logic is pretty straightforward, defined by if-else statements. More details in the code..
+
+### Future work
+I will definitely try to implement a "smarter" trajectory generator and path planner:
+
+* Trajectory generator improvements: Calculate a Jerk-Minimazing Trajectory (JMT), as shown in the lectures.
+* Path planner improvements: Predict the trajectories of the other vehicles around the Ego car, to then calculate the best trajectory we can take (evaluating them with cost functions). I have implemented a linear-decision planner (with if-else statements), which seems to work pretty well in the simulator. However, I know that in a real self-driving car, taking decisions must be done in other ways, as real-life scenarios are more unpredictable.
+
 ## Dependencies
 
 * cmake >= 3.5
@@ -86,55 +116,3 @@ A really helpful resource for doing this project and creating smooth trajectorie
     cd uWebSockets
     git checkout e94b6e1
     ```
-
-## Editor Settings
-
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
-
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
-
-## Code Style
-
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
-
-## Project Instructions and Rubric
-
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
-
-
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
-
