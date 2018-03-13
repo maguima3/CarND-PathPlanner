@@ -69,12 +69,12 @@ A really helpful resource for doing this project and creating smooth trajectorie
 ## Rubric Points
 
 ### The car is able to drive at least 4.32 miles without incident
-I have successfully driven more than 20 minutes without incidents.
+I have successfully driven more than 10 miles without incidents (see ``result_video``).
 
 ### Reflection: how to generate paths
 Generating paths seems to be the hardest part of this project, as there are several requirements for safety and comfort that need to be met: no collisions, max acceleration of 10 m/s^2, max jerk of 10 m/s^3, not staying between lanes more than 3 seconds.
 
-Due to the problems that other students reported, I have followed the approach described in the walkthrough video. That is, I have used splines to generate my trajectories. To create smooth paths, we set three anchor points in the future (in my case 30, 60 and 90 meters ahead) and we add the points of the previous path. This method has proven to work really good, and it is very easy to implement.
+Due to the problems that other students reported, I have followed the approach described in the walkthrough video. That is, I have used splines to generate my trajectories. To create smooth paths, we set three anchor points in the future (in my case 40, 50 and 100 meters ahead, to avoid occasional acceleration violations) and we add the points of the previous path. This method has proven to work really good. It generates a smooth, continuous path, and it is very easy to implement.
 
 The implementation of the trajectory generations is in ``trajectory_generator.cpp``.
 
