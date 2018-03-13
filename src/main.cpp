@@ -79,59 +79,59 @@ int main() {
           // j[1] is the data JSON object
           
         	// Main car's localization Data
-          	double car_x = j[1]["x"];
-          	double car_y = j[1]["y"];
-          	double car_s = j[1]["s"];
-          	double car_d = j[1]["d"];
-          	double car_yaw = j[1]["yaw"];
-          	double car_speed = j[1]["speed"];
+        	double car_x = j[1]["x"];
+        	double car_y = j[1]["y"];
+        	double car_s = j[1]["s"];
+        	double car_d = j[1]["d"];
+        	double car_yaw = j[1]["yaw"];
+        	double car_speed = j[1]["speed"];
 
-          	// Previous path data given to the Planner
-          	auto previous_path_x = j[1]["previous_path_x"];
-          	auto previous_path_y = j[1]["previous_path_y"];
-          	// Previous path's end s and d values 
-          	double end_path_s = j[1]["end_path_s"];
-          	double end_path_d = j[1]["end_path_d"];
+        	// Previous path data given to the Planner
+        	auto previous_path_x = j[1]["previous_path_x"];
+        	auto previous_path_y = j[1]["previous_path_y"];
+        	// Previous path's end s and d values 
+        	double end_path_s = j[1]["end_path_s"];
+        	double end_path_d = j[1]["end_path_d"];
 
-          	// Sensor Fusion Data, a list of all other cars on the same side of the road.
-          	/*
-          	 * 2d vector of cars and then that car's:
-          	 *  car's unique ID,
-          	 *  car's x position in map coordinates,
-          	 *  car's y position in map coordinates,
-          	 *  car's x velocity in m/s,
-          	 *  car's y velocity in m/s,
-          	 *  car's s position in frenet coordinates,
-          	 *  car's d position in frenet coordinates.
-          	 */
-          	auto sensor_fusion = j[1]["sensor_fusion"];
+        	// Sensor Fusion Data, a list of all other cars on the same side of the road.
+        	/*
+        	 * 2d vector of cars and then that car's:
+        	 *  car's unique ID,
+        	 *  car's x position in map coordinates,
+        	 *  car's y position in map coordinates,
+        	 *  car's x velocity in m/s,
+        	 *  car's y velocity in m/s,
+        	 *  car's s position in frenet coordinates,
+        	 *  car's d position in frenet coordinates.
+        	 */
+        	auto sensor_fusion = j[1]["sensor_fusion"];
 
-          	json msgJson;
+        	json msgJson;
 
-          	// Define our car
-          	Vehicle ego = Vehicle(car_x, car_y, car_s, car_d);
-          	ego.setId(0);
-          	ego.setSpeed(car_speed);
-          	ego.setYaw(car_yaw);
+        	// Define our car
+        	Vehicle ego = Vehicle(car_x, car_y, car_s, car_d);
+        	ego.setId(0);
+        	ego.setSpeed(car_speed);
+        	ego.setYaw(car_yaw);
 
-          	// Number of waypoints calculated in the last iteration, which the car didn't go through
-          	// Would be a number close to 50 (e.g 47)
-          	double prev_size = previous_path_x.size();
+        	// Number of waypoints calculated in the last iteration, which the car didn't go through
+        	// Would be a number close to 50 (e.g 47)
+        	double prev_size = previous_path_x.size();
 
-          	// Detect collisions
-          	if (prev_size > 0) {
-          	  car_s = end_path_s; // Use last point of the previous path as car_s to ease calculations
-          	}
+        	// Detect collisions
+        	if (prev_size > 0) {
+        	  car_s = end_path_s; // Use last point of the previous path as car_s to ease calculations
+        	}
 
-          	VehicleDetector detector = VehicleDetector(ego, lane, sensor_fusion);
+        	VehicleDetector detector = VehicleDetector(ego, lane, sensor_fusion);
 
-          	if (detector.infront_tooClose) {
+        	if (detector.infront_tooClose) {
             PathPlanner planner = PathPlanner(lane, detector, car_s, prev_size);
             lane = planner.nextLane();
-          	}
+        	}
           //printf("Next lane %f \n", lane);
 
-          	// Get the car in front of us
+          // Get the car in front of us
           Vehicle car_infront;
           bool isCarInfront = detector.getCarInfront(car_infront);
 
@@ -148,7 +148,7 @@ int main() {
               ref_velocity += .1; // m/s
             }
           // Try to reach the max velocity if there are not cars too close
-          } else if (ref_velocity < max_velocity){
+          } else if (ref_velocity < max_velocity) {
             ref_velocity += .3;
           }
 
@@ -165,13 +165,13 @@ int main() {
 
           trajectoryGenerator.findTrajectory(next_x_vals, next_y_vals);
 
-          	msgJson["next_x"] = next_x_vals;
-          	msgJson["next_y"] = next_y_vals;
+        	msgJson["next_x"] = next_x_vals;
+        	msgJson["next_y"] = next_y_vals;
 
-          	auto msg = "42[\"control\","+ msgJson.dump()+"]";
+        	auto msg = "42[\"control\","+ msgJson.dump()+"]";
 
-          	//this_thread::sleep_for(chrono::milliseconds(1000));
-          	ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+        	//this_thread::sleep_for(chrono::milliseconds(1000));
+        	ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
           
         }
       } else {

@@ -92,19 +92,14 @@ double PathPlanner::nextLane() {
         next_lane = 1.0;
       }
       else {
-        // Move to the center lane if it moves relatively faster
-        // Even if the center lane is a little bit slower (speed_buffer m/s slower),
-        // is better to move to the center, as if offer more possibilities to change
-
-        printf("Speed of the car in the center: %f\n", centerAhead.getSpeed());
-        printf("Speed of the car in front: %f\n", car_infront.getSpeed());
+        // Move to the center lane if it moves faster or a little bit slower (speed_buffer m/s slower)
+        // It is better to move to the center, as it offers more possibilities
+        //printf("Speed of the car in the center: %f\n", centerAhead.getSpeed());
+        //printf("Speed of the car in front: %f\n", car_infront.getSpeed());
+        printf("Cheking if the car in the center is faster...\n");
         next_lane = (centerAhead.getSpeed()+speedBuffer>car_infront.getSpeed()) ? 1.0 : current_lane;
       }
     }
-    // If is not safe to move, keep in the current lane
-//    else {
-//      next_lane = current_lane;
-//    }
   }
   // Center lane
   else {

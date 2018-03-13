@@ -16,9 +16,7 @@ using namespace std;
 
 class PathPlanner {
  private:
-//  Vehicle ego;
   VehicleDetector detector;
-
   double lane;
 
   // Ego car s value in the future (if there are points unused in the previous path)
